@@ -6,7 +6,7 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   adminLogin: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, phone?: string) => Promise<boolean>;
+  register: (email: string, password: string, phone?: string, referredBy?: string) => Promise<boolean>;
   logout: () => void;
   updateWalletBalance: (amount: number) => void;
 }
@@ -57,19 +57,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  const register = async (email: string, password: string, phone?: string): Promise<boolean> => {
+  const register = async (email: string, password: string, phone?: string, referredBy?: string): Promise<boolean> => {
     const users = JSON.parse(localStorage.getItem('starnetx_users') || '[]');
     
     if (users.find((u: User) => u.email === email)) {
       return false; // User already exists
     }
 
+    // Validate referral code if provided
+    let referrerUser = null;
+    if (referredBy) {
+      referrerUser = users.find((u: User) => u.referralCode === referredBy.toUpperCase());
+      if (!referrerUser) {
+        return false; // Invalid referral code
+      }
+    }
     const newUser: User = {
       id: Date.now().toString(),
       email,
       phone,
       walletBalance: 0,
       referralCode: generateReferralCode(),
+      referredBy: referrerUser ? referrerUser.id : undefined,
       createdAt: new Date().toISOString(),
     };
 

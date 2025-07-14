@@ -57,16 +57,17 @@ export const WalletCard: React.FC = () => {
           </div>
           <div>
             <p className="text-gray-600 text-sm">Balance</p>
-            <p className="text-xl font-bold text-gray-900">
+            <p className="text-lg sm:text-xl font-bold text-gray-900">
               ₦ {user?.walletBalance?.toFixed(1) || '124.5'}
             </p>
           </div>
         </div>
         <Button
           onClick={() => setShowTopUp(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium"
         >
-          + Top Up Balance
+          <span className="hidden sm:inline">+ Top Up Balance</span>
+          <span className="sm:hidden">+ Top Up</span>
         </Button>
       </div>
     </div>

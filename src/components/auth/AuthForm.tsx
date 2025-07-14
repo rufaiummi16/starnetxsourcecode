@@ -13,6 +13,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isAdmin = false }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -31,7 +32,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isAdmin = false }) => {
       } else if (isLogin) {
         success = await login(email, password);
       } else {
-        success = await register(email, password, phone);
+        success = await register(email, password, phone, referralCode);
       }
 
       if (!success) {
@@ -82,6 +83,16 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isAdmin = false }) => {
               value={phone}
               onChange={setPhone}
               placeholder="Enter your phone number (optional)"
+            />
+          )}
+
+          {!isLogin && !isAdmin && (
+            <Input
+              label="Referral Code"
+              type="text"
+              value={referralCode}
+              onChange={setReferralCode}
+              placeholder="Enter referral code (optional)"
             />
           )}
 

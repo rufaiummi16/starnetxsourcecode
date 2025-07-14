@@ -229,6 +229,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Mark credential as used
     updateCredentialStatus(availableCredential.id, 'used', userId, purchase.id);
 
+    // Handle referral commission
+    const users = JSON.parse(localStorage.getItem('starnetx_users') || '[]');
+    const purchaserUser = users.find((u: any) => u.id === userId);
+    
+    if (purchaserUser && purchaserUser.referredBy) {
+      const referrerIndex = users.findIndex((u: any) => u.id === purchaserUser.referredBy);
+      if (referrerIndex !== -1) {
+        const commission = plan.price * 0.1; // 10% commission
+        users[referrerIndex].walletBalance += commission;
+        localStorage.setItem('starnetx_users', JSON.stringify(users));
+        
+        // Update current user if they are the referrer
+        const currentUser = JSON.parse(localStorage.getItem('starnetx_user') || 'null');
+        if (currentUser && currentUser.id === users[referrerIndex].id) {
+          localStorage.setItem('starnetx_user', JSON.stringify(users[referrerIndex]));
+        }
+      }
+    }
     const updatedPurchases = [...purchases, purchase];
     setPurchases(updatedPurchases);
     localStorage.setItem('starnetx_purchases', JSON.stringify(updatedPurchases));
