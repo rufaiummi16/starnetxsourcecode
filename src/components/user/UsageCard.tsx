@@ -56,7 +56,7 @@ export const UsageCard: React.FC<UsageCardProps> = ({ purchase }) => {
             <Wifi className="text-green-600" size={20} />
           </div>
           <div>
-            <p className="font-semibold text-gray-900 text-lg">Data {plan.dataAmount} GB</p>
+            <p className="font-semibold text-gray-900 text-lg">Unlimited</p>
             <p className="text-sm text-gray-500">Weekly Plan</p>
           </div>
         </div>

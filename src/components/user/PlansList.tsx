@@ -65,7 +65,7 @@ export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
                 <Wifi className="text-green-600" size={20} />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 text-base">Data {plan.dataAmount} GB</p>
+                <p className="font-semibold text-gray-900 text-base">Unlimited</p>
                 <p className="text-sm text-gray-500">
                   {plan.type === 'weekly' ? 'Weekly Plan' : 
                    plan.type === 'monthly' ? 'Monthly Plan' : 
@@ -76,7 +76,10 @@ export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
 
             <div className="space-y-2">
               <div className="text-sm text-gray-600">
-                Internet {plan.dataAmount} GB
+                Available at all active StarNetX locations
+              </div>
+              <div className="text-sm text-gray-600">
+                Price: ₦{plan.price.toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">
                 {plan.type === 'weekly' ? '1 week' : 
@@ -84,10 +87,7 @@ export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
                  plan.duration}
               </div>
               
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-lg font-bold text-gray-900">
-                  ₦ {plan.price.toFixed(2)}
-                </span>
+              <div className="flex justify-end items-center pt-2">
                 <ChevronRight className="text-gray-400" size={20} />
               </div>
             </div>

@@ -27,6 +27,9 @@ export const SettingsPage: React.FC = () => {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{user?.email}</h2>
+            {user?.phone && (
+              <p className="text-gray-600">{user.phone}</p>
+            )}
             <p className="text-gray-600">Member since {new Date(user?.createdAt || '').toLocaleDateString()}</p>
           </div>
         </div>

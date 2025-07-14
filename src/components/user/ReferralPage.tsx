@@ -16,20 +16,6 @@ export const ReferralPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Mock referral data - in real app, this would come from API
-  const referralStats = {
-    totalReferrals: 12,
-    activeReferrals: 8,
-    totalEarnings: 48.00,
-    pendingEarnings: 16.00,
-  };
-
-  const recentReferrals = [
-    { id: 1, email: 'john@example.com', date: '2024-01-15', status: 'active', earnings: 4.00 },
-    { id: 2, email: 'sarah@example.com', date: '2024-01-14', status: 'pending', earnings: 4.00 },
-    { id: 3, email: 'mike@example.com', date: '2024-01-13', status: 'active', earnings: 4.00 },
-  ];
-
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -81,55 +67,14 @@ export const ReferralPage: React.FC = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Users className="text-blue-600" size={20} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{referralStats.totalReferrals}</p>
-              <p className="text-sm text-gray-600">Total Referrals</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="text-green-600" size={20} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                ₦{referralStats.totalEarnings.toFixed(2)}
-              </p>
-              <p className="text-sm text-gray-600">Total Earnings</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Referrals</h2>
-        <div className="space-y-3">
-          {recentReferrals.map((referral) => (
-            <div key={referral.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">{referral.email}</p>
-                <p className="text-sm text-gray-600">{referral.date}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-900">₦{referral.earnings.toFixed(2)}</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  referral.status === 'active' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {referral.status}
-                </span>
-              </div>
-            </div>
-          ))}
+        <h2 className="text-lg font-semibold mb-4">Referral Statistics</h2>
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="text-gray-400" size={32} />
+          </div>
+          <p className="text-gray-600 mb-2">No referral data available yet</p>
+          <p className="text-sm text-gray-500">Start sharing your referral code to see your earnings here!</p>
         </div>
       </Card>
 
