@@ -37,7 +37,7 @@ export const SettingsPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-50 p-3 rounded-lg">
             <p className="text-sm text-gray-600">Wallet Balance</p>
-            <p className="text-lg font-bold text-gray-900">₦{user?.walletBalance?.toFixed(2)}</p>
+            <p className="text-lg font-bold text-gray-900">₦{user?.walletBalance?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           </div>
           <div className="bg-gray-50 p-3 rounded-lg">
             <p className="text-sm text-gray-600">Referral Code</p>

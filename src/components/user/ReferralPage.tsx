@@ -104,7 +104,7 @@ export const ReferralPage: React.FC = () => {
               3
             </div>
             <div>
-              <p className="font-medium">Your friend earns rewards</p>
+              <p className="font-medium">You earn commission</p>
               <p className="text-sm text-gray-600">Your friend gets ₦4 credited to their wallet automatically. You earn 10% commission on every purchase they make. Minimum withdrawal is ₦500.</p>
             </div>
           </div>

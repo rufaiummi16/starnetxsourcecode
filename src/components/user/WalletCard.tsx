@@ -58,7 +58,7 @@ export const WalletCard: React.FC = () => {
           <div>
             <p className="text-gray-600 text-sm">Balance</p>
             <p className="text-lg sm:text-xl font-bold text-gray-900">
-              ₦ {user?.walletBalance?.toFixed(1) || '124.5'}
+              ₦ {user?.walletBalance?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '124.50'}
             </p>
           </div>
         </div>
