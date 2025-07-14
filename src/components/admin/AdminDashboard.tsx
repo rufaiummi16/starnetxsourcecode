@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, getAllUsers } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 import { LocationManager } from './LocationManager';
 import { TransactionsView } from './TransactionsView';
 import { ReferralTracking } from './ReferralTracking';
@@ -88,13 +89,82 @@ export const AdminDashboard: React.FC = () => {
 };
 
 const AdminOverview: React.FC = () => {
-  // Mock data - in real app, this would come from API
+  const { getAllPurchases, locations, credentials } = useData();
+  const allUsers = getAllUsers();
+  const allPurchases = getAllPurchases();
+  
+  // Calculate real statistics
+  const totalRevenue = allPurchases.reduce((sum, purchase) => sum + purchase.amount, 0);
+  const totalUsers = allUsers.length;
+  const activeConnections = credentials.filter(cred => cred.status === 'used').length;
+  const totalLocations = locations.length;
+  
   const stats = {
-    totalRevenue: 2450.00,
-    totalUsers: 156,
-    activeConnections: 23,
-    totalLocations: 5,
+    totalRevenue,
+    totalUsers,
+    activeConnections,
+    totalLocations,
   };
+  
+  // Get recent activity (last 10 purchases)
+  const recentActivity = allPurchases
+    .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime())
+    .slice(0, 4)
+    .map(purchase => {
+      const user = allUsers.find(u => u.id === purchase.userId);
+      const timeDiff = Date.now() - new Date(purchase.purchaseDate).getTime();
+      const minutesAgo = Math.floor(timeDiff / (1000 * 60));
+      const hoursAgo = Math.floor(minutesAgo / 60);
+      const daysAgo = Math.floor(hoursAgo / 24);
+      
+      let timeDisplay;
+      if (daysAgo > 0) {
+        timeDisplay = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+      } else if (hoursAgo > 0) {
+        timeDisplay = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+      } else {
+        timeDisplay = `${minutesAgo} minute${minutesAgo > 1 ? 's' : ''} ago`;
+      }
+      
+      return {
+        action: `Plan purchased by ${user?.email?.split('@')[0] || 'User'}`,
+        time: timeDisplay,
+      };
+    });
+  
+  // Add recent user registrations
+  const recentUsers = allUsers
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 2)
+    .map(user => {
+      const timeDiff = Date.now() - new Date(user.createdAt).getTime();
+      const minutesAgo = Math.floor(timeDiff / (1000 * 60));
+      const hoursAgo = Math.floor(minutesAgo / 60);
+      const daysAgo = Math.floor(hoursAgo / 24);
+      
+      let timeDisplay;
+      if (daysAgo > 0) {
+        timeDisplay = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+      } else if (hoursAgo > 0) {
+        timeDisplay = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+      } else {
+        timeDisplay = `${minutesAgo} minute${minutesAgo > 1 ? 's' : ''} ago`;
+      }
+      
+      return {
+        action: `New user registration - ${user.email.split('@')[0]}`,
+        time: timeDisplay,
+      };
+    });
+  
+  const combinedActivity = [...recentActivity, ...recentUsers]
+    .sort((a, b) => {
+      // Simple time sorting - in production you'd want more robust sorting
+      const aMinutes = parseInt(a.time);
+      const bMinutes = parseInt(b.time);
+      return aMinutes - bMinutes;
+    })
+    .slice(0, 4);
 
   return (
     <div className="space-y-6">
@@ -153,40 +223,73 @@ const AdminOverview: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-          <div className="space-y-3">
-            {[
-              { action: 'New user registration', time: '2 minutes ago' },
-              { action: 'Plan purchased - StarNetX 1', time: '15 minutes ago' },
-              { action: 'Location added - StarNetX 5', time: '1 hour ago' },
-              { action: 'Referral completed', time: '2 hours ago' },
-            ].map((activity, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                <span className="text-gray-900">{activity.action}</span>
-                <span className="text-sm text-gray-500">{activity.time}</span>
-              </div>
-            ))}
-          </div>
+          {combinedActivity.length > 0 ? (
+            <div className="space-y-3">
+              {combinedActivity.map((activity, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                  <span className="text-gray-900">{activity.action}</span>
+                  <span className="text-sm text-gray-500">{activity.time}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No recent activity</p>
+            </div>
+          )}
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Popular Plans</h3>
-          <div className="space-y-3">
-            {[
-              { plan: 'Daily Essential', purchases: 45, percentage: 65 },
-              { plan: 'Weekly Standard', purchases: 23, percentage: 33 },
-              { plan: 'Monthly Premium', purchases: 12, percentage: 17 },
-              { plan: 'Quick Browse', purchases: 8, percentage: 12 },
-            ].map((item, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-900">{item.plan}</span>
-                  <span className="text-sm text-gray-600">{item.purchases} purchases</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${item.percentage}%` }}
-                  ></div>
+          <h3 className="text-lg font-semibold mb-4">Plan Statistics</h3>
+          {allPurchases.length > 0 ? (
+            <div className="space-y-3">
+              {(() => {
+                // Calculate plan popularity
+                const planCounts: { [key: string]: number } = {};
+                allPurchases.forEach(purchase => {
+                  planCounts[purchase.planId] = (planCounts[purchase.planId] || 0) + 1;
+                });
+                
+                const totalPurchases = allPurchases.length;
+                const planStats = Object.entries(planCounts)
+                  .map(([planId, count]) => {
+                    // Find plan name - you might need to import plans from DataContext
+                    const planNames: { [key: string]: string } = {
+                      '1': 'Quick Browse',
+                      '2': 'Daily Essential',
+                      '3': 'Weekly Standard',
+                      '4': 'Monthly Premium',
+                    };
+                    return {
+                      plan: planNames[planId] || `Plan ${planId}`,
+                      purchases: count,
+                      percentage: Math.round((count / totalPurchases) * 100),
+                    };
+                  })
+                  .sort((a, b) => b.purchases - a.purchases)
+                  .slice(0, 4);
+                
+                return planStats.map((item, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-900">{item.plan}</span>
+                      <span className="text-sm text-gray-600">{item.purchases} purchases</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${item.percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No purchase data available</p>
+            </div>
+          )}
                 </div>
               </div>
             ))}

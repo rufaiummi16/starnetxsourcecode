@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, getAllUsers } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 import { Copy, Users, DollarSign } from 'lucide-react';
 
 export const ReferralPage: React.FC = () => {
   const { user } = useAuth();
+  const { getAllPurchases } = useData();
   const [copied, setCopied] = useState(false);
+  
+  const allUsers = getAllUsers();
+  const allPurchases = getAllPurchases();
 
   const referralUrl = `https://starnetx.com/signup?ref=${user?.referralCode}`;
+  
+  // Calculate user's referral statistics
+  const myReferrals = allUsers.filter(u => u.referredBy === user?.id);
+  const myEarnings = allPurchases
+    .filter(purchase => {
+      const purchaser = allUsers.find(u => u.id === purchase.userId);
+      return purchaser && purchaser.referredBy === user?.id;
+    })
+    .reduce((total, purchase) => total + (purchase.amount * 0.1), 0);
 
   const copyReferralCode = () => {
     navigator.clipboard.writeText(referralUrl);
@@ -69,13 +83,59 @@ export const ReferralPage: React.FC = () => {
 
       <Card className="p-6">
         <h2 className="text-lg font-semibold mb-4">Referral Statistics</h2>
-        <div className="text-center py-8">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="text-gray-400" size={32} />
+        {myReferrals.length > 0 ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Users className="text-blue-600" size={24} />
+                </div>
+                <p className="text-2xl font-bold text-blue-900">{myReferrals.length}</p>
+                <p className="text-sm text-blue-700">Total Referrals</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <DollarSign className="text-green-600" size={24} />
+                </div>
+                <p className="text-2xl font-bold text-green-900">₦{myEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-sm text-green-700">Total Earnings</p>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Your Referrals</h3>
+              <div className="space-y-2">
+                {myReferrals.map((referredUser) => {
+                  const userPurchases = allPurchases.filter(p => p.userId === referredUser.id);
+                  const userEarnings = userPurchases.reduce((total, purchase) => total + (purchase.amount * 0.1), 0);
+                  
+                  return (
+                    <div key={referredUser.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">{referredUser.email}</p>
+                        <p className="text-sm text-gray-600">
+                          Joined {new Date(referredUser.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">₦{userEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-sm text-gray-600">{userPurchases.length} purchases</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <p className="text-gray-600 mb-2">No referral data available yet</p>
-          <p className="text-sm text-gray-500">Start sharing your referral code to see your earnings here!</p>
-        </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="text-gray-400" size={32} />
+            </div>
+            <p className="text-gray-600 mb-2">No referral data available yet</p>
+            <p className="text-sm text-gray-500">Start sharing your referral code to see your earnings here!</p>
+          </div>
+        )}
       </Card>
 
       <Card className="p-6">

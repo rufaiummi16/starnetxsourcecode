@@ -1,30 +1,81 @@
 import React from 'react';
 import { Card } from '../ui/Card';
+import { useAuth, getAllUsers } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 import { Users, DollarSign, TrendingUp } from 'lucide-react';
 
 export const ReferralTracking: React.FC = () => {
-  // Mock referral data - in real app, this would come from API
+  const { getAllPurchases } = useData();
+  const allUsers = getAllUsers();
+  const allPurchases = getAllPurchases();
+  
+  // Calculate real referral statistics
+  const referredUsers = allUsers.filter(user => user.referredBy);
+  const totalReferrals = referredUsers.length;
+  const activeReferrals = totalReferrals; // All referrals are considered active for now
+  
+  // Calculate total earnings from referrals
+  let totalEarnings = 0;
+  const referrerEarnings: { [key: string]: { earnings: number; referrals: number; email: string } } = {};
+  
+  // Initialize referrer data
+  allUsers.forEach(user => {
+    referrerEarnings[user.id] = {
+      earnings: 0,
+      referrals: 0,
+      email: user.email,
+    };
+  });
+  
+  // Count referrals per user
+  referredUsers.forEach(user => {
+    if (user.referredBy && referrerEarnings[user.referredBy]) {
+      referrerEarnings[user.referredBy].referrals++;
+    }
+  });
+  
+  // Calculate earnings from purchases
+  allPurchases.forEach(purchase => {
+    const purchaser = allUsers.find(u => u.id === purchase.userId);
+    if (purchaser && purchaser.referredBy && referrerEarnings[purchaser.referredBy]) {
+      const commission = purchase.amount * 0.1; // 10% commission
+      referrerEarnings[purchaser.referredBy].earnings += commission;
+      totalEarnings += commission;
+    }
+  });
+  
   const referralStats = {
-    totalReferrals: 156,
-    activeReferrals: 124,
-    totalEarnings: 624.00,
-    pendingEarnings: 96.00,
+    totalReferrals,
+    activeReferrals,
+    totalEarnings,
   };
 
-  const topReferrers = [
-    { id: 1, email: 'john@example.com', referrals: 23, earnings: 92.00 },
-    { id: 2, email: 'sarah@example.com', referrals: 18, earnings: 72.00 },
-    { id: 3, email: 'mike@example.com', referrals: 15, earnings: 60.00 },
-    { id: 4, email: 'anna@example.com', referrals: 12, earnings: 48.00 },
-    { id: 5, email: 'david@example.com', referrals: 10, earnings: 40.00 },
-  ];
+  // Get top referrers
+  const topReferrers = Object.entries(referrerEarnings)
+    .filter(([_, data]) => data.referrals > 0)
+    .map(([id, data]) => ({
+      id,
+      email: data.email,
+      referrals: data.referrals,
+      earnings: data.earnings,
+    }))
+    .sort((a, b) => b.referrals - a.referrals)
+    .slice(0, 5);
 
-  const recentReferrals = [
-    { id: 1, referrer: 'john@example.com', referred: 'newuser1@example.com', date: '2024-01-15', status: 'completed' },
-    { id: 2, referrer: 'sarah@example.com', referred: 'newuser2@example.com', date: '2024-01-14', status: 'pending' },
-    { id: 3, referrer: 'mike@example.com', referred: 'newuser3@example.com', date: '2024-01-13', status: 'completed' },
-    { id: 4, referrer: 'anna@example.com', referred: 'newuser4@example.com', date: '2024-01-12', status: 'completed' },
-  ];
+  // Get recent referrals
+  const recentReferrals = referredUsers
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 4)
+    .map(user => {
+      const referrer = allUsers.find(u => u.id === user.referredBy);
+      return {
+        id: user.id,
+        referrer: referrer?.email || 'Unknown',
+        referred: user.email,
+        date: new Date(user.createdAt).toLocaleDateString(),
+        status: 'completed', // All referrals are completed when user signs up
+      };
+    });
 
   return (
     <div className="space-y-6">
@@ -57,24 +108,12 @@ export const ReferralTracking: React.FC = () => {
 
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="text-purple-600" size={24} />
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="text-green-600" size={24} />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Earnings</p>
-             <p className="text-2xl font-bold text-gray-900">₦{referralStats.totalEarnings.toFixed(2)}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="text-yellow-600" size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Pending Earnings</p>
-             <p className="text-2xl font-bold text-gray-900">₦{referralStats.pendingEarnings.toFixed(2)}</p>
+             <p className="text-2xl font-bold text-gray-900">₦{referralStats.totalEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </Card>
@@ -83,47 +122,59 @@ export const ReferralTracking: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Top Referrers</h3>
-          <div className="space-y-3">
-            {topReferrers.map((referrer, index) => (
-              <div key={referrer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-sm">{index + 1}</span>
+          {topReferrers.length > 0 ? (
+            <div className="space-y-3">
+              {topReferrers.map((referrer, index) => (
+                <div key={referrer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm">{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{referrer.email}</p>
+                      <p className="text-sm text-gray-600">{referrer.referrals} referrals</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{referrer.email}</p>
-                    <p className="text-sm text-gray-600">{referrer.referrals} referrals</p>
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">₦{referrer.earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className="text-sm text-gray-600">earned</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">₦{referrer.earnings.toFixed(2)}</p>
-                  <p className="text-sm text-gray-600">earned</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No referrers yet</p>
+            </div>
+          )}
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Referral Activity</h3>
-          <div className="space-y-3">
-            {recentReferrals.map((referral) => (
-              <div key={referral.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
-                <div>
-                  <p className="font-medium text-gray-900">{referral.referrer}</p>
-                  <p className="text-sm text-gray-600">referred {referral.referred}</p>
-                  <p className="text-xs text-gray-500">{referral.date}</p>
+          {recentReferrals.length > 0 ? (
+            <div className="space-y-3">
+              {recentReferrals.map((referral) => (
+                <div key={referral.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
+                  <div>
+                    <p className="font-medium text-gray-900">{referral.referrer}</p>
+                    <p className="text-sm text-gray-600">referred {referral.referred}</p>
+                    <p className="text-xs text-gray-500">{referral.date}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    referral.status === 'completed' 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {referral.status}
+                  </span>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  referral.status === 'completed' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {referral.status}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No recent referral activity</p>
+            </div>
+          )}
         </Card>
       </div>
 

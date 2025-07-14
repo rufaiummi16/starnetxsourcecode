@@ -134,3 +134,7 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export const getAllUsers = (): User[] => {
+  return JSON.parse(localStorage.getItem('starnetx_users') || '[]');
+};
