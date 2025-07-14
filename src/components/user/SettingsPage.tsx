@@ -1,15 +1,35 @@
 import React from 'react';
+import { useState } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
-import { User, Wifi, CreditCard, LogOut, Clock } from 'lucide-react';
+import { PurchaseReceiptModal } from './PurchaseReceiptModal';
+import { Purchase } from '../../types';
+import { User, Wifi, LogOut, ChevronLeft, ChevronRight, Receipt } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { getUserPurchases } = useData();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+  const itemsPerPage = 5;
 
   const userPurchases = getUserPurchases(user?.id || '');
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(userPurchases.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPurchases = userPurchases.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
 
   return (
     <div className="space-y-6">
@@ -51,12 +71,17 @@ export const SettingsPage: React.FC = () => {
         {userPurchases.length === 0 ? (
           <p className="text-gray-600 text-center py-4">No purchases yet</p>
         ) : (
-          <div className="space-y-3">
-            {userPurchases.slice(0, 5).map((purchase) => (
-              <div key={purchase.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <>
+            <div className="space-y-3 mb-4">
+              {currentPurchases.map((purchase) => (
+                <div 
+                  key={purchase.id} 
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => setSelectedPurchase(purchase)}
+                >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Wifi className="text-blue-600" size={16} />
+                    <Receipt className="text-blue-600" size={16} />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Plan Purchase</p>
@@ -66,7 +91,7 @@ export const SettingsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">₦{purchase.amount.toFixed(2)}</p>
+                  <p className="font-semibold text-gray-900">₦{purchase.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     purchase.status === 'active' 
                       ? 'bg-green-100 text-green-700' 
@@ -78,8 +103,42 @@ export const SettingsPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2"
+                >
+                  <ChevronLeft size={16} />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-2"
+                >
+                  Next
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </Card>
 
@@ -91,19 +150,6 @@ export const SettingsPage: React.FC = () => {
           </button>
         </Card>
 
-        <Card className="p-4">
-          <button className="w-full flex items-center gap-3 text-left">
-            <CreditCard className="text-gray-600" size={20} />
-            <span className="text-gray-900">Payment Methods</span>
-          </button>
-        </Card>
-
-        <Card className="p-4">
-          <button className="w-full flex items-center gap-3 text-left">
-            <Clock className="text-gray-600" size={20} />
-            <span className="text-gray-900">Usage History</span>
-          </button>
-        </Card>
       </div>
 
       <Button
@@ -114,6 +160,14 @@ export const SettingsPage: React.FC = () => {
         <LogOut size={20} />
         Sign Out
       </Button>
+      
+      {/* Purchase Receipt Modal */}
+      {selectedPurchase && (
+        <PurchaseReceiptModal
+          purchase={selectedPurchase}
+          onClose={() => setSelectedPurchase(null)}
+        />
+      )}
     </div>
   );
 };
