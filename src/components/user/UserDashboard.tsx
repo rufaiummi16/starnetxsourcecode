@@ -26,7 +26,7 @@ export const UserDashboard: React.FC = () => {
           <div className="space-y-6">
             <WalletCard />
             {activePurchase && <UsageCard purchase={activePurchase} />}
-            <PlansList />
+            <PlansList onSeeAllClick={() => setActivePage('plans')} />
           </div>
         );
       case 'plans':

@@ -9,9 +9,10 @@ import { ChevronRight, Wifi } from 'lucide-react';
 
 interface PlansListProps {
   showAll?: boolean;
+  onSeeAllClick?: () => void;
 }
 
-export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
+export const PlansList: React.FC<PlansListProps> = ({ showAll = false, onSeeAllClick }) => {
   const { plans, getCredentialsByLocation } = useData();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   
@@ -45,7 +46,10 @@ export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
           {showAll ? 'Popular Plans' : 'Popular Plan'}
         </h2>
         {!showAll && (
-          <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+          <button 
+            onClick={onSeeAllClick}
+            className="text-blue-600 text-sm font-medium hover:text-blue-700"
+          >
             See All
           </button>
         )}
@@ -65,7 +69,7 @@ export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
                 <Wifi className="text-green-600" size={20} />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 text-base">Unlimited</p>
+                <p className="font-bold text-gray-900 text-base">Unlimited</p>
                 <p className="text-sm text-gray-500">
                   {plan.type === 'weekly' ? 'Weekly Plan' : 
                    plan.type === 'monthly' ? 'Monthly Plan' : 
@@ -75,11 +79,8 @@ export const PlansList: React.FC<PlansListProps> = ({ showAll = false }) => {
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm text-gray-600">
-                Available at all active StarNetX locations
-              </div>
-              <div className="text-sm text-gray-600">
-                Price: ₦{plan.price.toFixed(2)}
+              <div className="text-sm text-gray-600 font-bold">
+                Price: ₦{plan.price.toFixed(0)}
               </div>
               <div className="text-sm text-gray-600">
                 {plan.type === 'weekly' ? '1 week' : 
